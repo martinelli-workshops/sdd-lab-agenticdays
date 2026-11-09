@@ -1,0 +1,19 @@
+{
+  "extraKnownMarketplaces": {
+    "ai-unified-process-marketplace": {
+      "source": {
+        "source": "github",
+        "repo": "ai-unified-process/marketplace"
+      }
+    }
+  },
+  "enabledPlugins": {
+    "aiup-core@ai-unified-process-marketplace": true,
+    "aiup-flyway@ai-unified-process-marketplace": true,
+    "aiup-jooq@ai-unified-process-marketplace": true,
+    "aiup-spring-boot@ai-unified-process-marketplace": true,
+    "aiup-vaadin@ai-unified-process-marketplace": true,
+    "aiup-vaadin-jooq@ai-unified-process-marketplace": false,
+    "aiup-playwright@ai-unified-process-marketplace": false
+  }
+}

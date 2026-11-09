@@ -1,0 +1,904 @@
+<meta charset="utf-8">
+<title>Hands-on Spec-Driven Development</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="reveal.css">
+<style>
+/* Layout: a spec sheet. Theory slides are calm paper with ink; hands-on slides are an amber work order. Eyebrows carry the real clock time of the session. */
+:root {
+  --paper: #eef2f0;
+  --ink: #13262b;
+  --muted: #566a6d;
+  --line: #c3cfcb;
+  --accent: #0b6e69;
+  --card: #f8faf9;
+  --logo: #0e3252;
+  --lab: #f2b33d;
+  --lab-ink: #1d1a12;
+  --lab-soft: #f7cd78;
+  --diagram-bg: #ffffff;
+  --font-display: "Poppins", "Segoe UI", system-ui, sans-serif;
+  --font-body: "Inter", "Segoe UI", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #0f1a1c; --ink: #e3ebe8; --muted: #93a8a6; --line: #2b3d3f; --accent: #5cc6bc; --card: #152427; --logo: #e3ebe8;
+    --lab: #e9a92f; --lab-ink: #1d1a12; --lab-soft: #f2c46a; --diagram-bg: #f3f6f4; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #0f1a1c; --ink: #e3ebe8; --muted: #93a8a6; --line: #2b3d3f; --accent: #5cc6bc; --card: #152427; --logo: #e3ebe8;
+  --lab: #e9a92f; --lab-ink: #1d1a12; --lab-soft: #f2c46a; --diagram-bg: #f3f6f4; color-scheme: dark;
+}
+html, body { height: 100%; }
+body { background: var(--paper); color: var(--ink); margin: 0; }
+.reveal { font-family: var(--font-body); font-size: 30px; color: var(--ink); }
+.reveal-viewport { background: var(--paper); }
+.reveal .slides { text-align: left; }
+.reveal .slides section { padding: 0 8px; box-sizing: border-box; height: 100%; }
+.reveal h1, .reveal h2, .reveal h3 { font-family: var(--font-display); color: var(--ink); text-wrap: balance; margin: 0; letter-spacing: 0; }
+.reveal h1 { font-size: 2.6em; font-weight: 800; line-height: 1.02; }
+.reveal h2 { font-size: 1.55em; font-weight: 700; line-height: 1.1; margin-bottom: 0.6em; }
+.reveal h3 { font-size: 0.95em; font-weight: 700; margin-bottom: 0.3em; }
+.reveal p, .reveal li { line-height: 1.4; }
+.reveal p { margin: 0 0 0.6em; }
+.reveal ul { margin: 0; padding-left: 1.1em; display: grid; gap: 0.35em; }
+.reveal li::marker { color: var(--accent); }
+.reveal a { color: var(--accent); text-decoration: underline; text-underline-offset: 0.15em; }
+.reveal a:focus-visible, .reveal button:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+.reveal code, .reveal .mono { font-family: var(--font-mono); font-size: 0.9em; }
+.reveal :not(pre) > code { background: var(--card); border: 1px solid var(--line); padding: 0.05em 0.3em; border-radius: 4px; }
+.reveal pre { width: 100%; margin: 0.4em 0; box-shadow: none; font-size: 0.6em; }
+.reveal pre code { display: block; padding: 0.8em 1em; background: var(--card); border: 1px solid var(--line); border-radius: 6px; color: var(--ink); max-height: none; line-height: 1.45; }
+.reveal table { border-collapse: collapse; font-size: 0.62em; width: 100%; }
+.reveal th, .reveal td { text-align: left; padding: 0.45em 0.7em; border-bottom: 1px solid var(--line); vertical-align: top; }
+.reveal th { font-family: var(--font-mono); font-weight: 500; font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); }
+.reveal tr.hl td { background: var(--card); font-weight: 600; }
+.reveal .controls { color: var(--accent); }
+.reveal .progress { color: var(--accent); height: 4px; }
+.reveal .slide-number { background: transparent; color: var(--muted); font-family: var(--font-mono); font-size: 14px; }
+
+/* Eyebrow: section and clock time */
+.eyebrow { font-family: var(--font-mono); font-size: 0.5em; text-transform: uppercase; letter-spacing: 0.14em; color: var(--muted); display: flex; gap: 1.2em; margin-bottom: 1.1em; }
+.eyebrow b { color: var(--accent); font-weight: 600; }
+.small { font-size: 0.7em; }
+.muted { color: var(--muted); }
+.source { position: absolute; bottom: 0.4em; left: 8px; font-size: 0.42em; color: var(--muted); font-family: var(--font-mono); }
+.cols { display: grid; grid-template-columns: 1fr 1fr; gap: 1.4em; }
+.cols3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1em; }
+.cols > *, .cols3 > * { min-width: 0; }
+.box { background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 0.8em 1em; font-size: 0.72em; }
+.box ul { gap: 0.25em; }
+.reveal .kicker { font-family: var(--font-display); font-weight: 700; font-size: 1.05em; color: var(--accent); margin-top: 1em; }
+.big-quote { font-family: var(--font-display); font-size: 1.5em; font-weight: 700; line-height: 1.15; max-width: 20em; }
+
+/* Title */
+.title-slide .logo { position: absolute; top: 0; right: 0; width: 240px; color: var(--logo); }
+.title-slide .logo svg { display: block; width: 100%; height: auto; fill: currentColor; }
+.title-slide h1 { max-width: 11em; }
+.tag { display: inline-block; font-family: var(--font-mono); font-size: 0.48em; letter-spacing: 0.14em; text-transform: uppercase; border: 1.5px solid var(--accent); color: var(--accent); padding: 0.3em 0.7em; border-radius: 999px; margin-bottom: 1.2em; }
+
+/* Agenda timeline */
+.timeline { display: grid; grid-template-columns: 5.2em 1fr auto; font-size: 0.66em; }
+.timeline > div { padding: 0.42em 0; border-bottom: 1px solid var(--line); }
+.timeline .t { font-family: var(--font-mono); color: var(--muted); font-variant-numeric: tabular-nums; }
+.timeline .d { font-family: var(--font-mono); color: var(--muted); text-align: right; font-variant-numeric: tabular-nums; }
+.timeline .lab { font-weight: 600; }
+.timeline .lab::before { content: "HANDS-ON"; font-family: var(--font-mono); font-size: 0.68em; letter-spacing: 0.1em; background: var(--lab); color: var(--lab-ink); padding: 0.15em 0.45em; border-radius: 3px; margin-right: 0.6em; vertical-align: 0.12em; }
+
+/* Section divider */
+.divider .num { font-family: var(--font-mono); color: var(--accent); font-size: 0.6em; letter-spacing: 0.14em; }
+.divider h2 { font-size: 2.6em; font-weight: 800; margin-top: 0.2em; }
+.divider p { color: var(--muted); font-size: 0.8em; }
+
+/* Flow of AI Unified Process steps */
+.flow { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.5em; font-size: 0.62em; }
+.flow > div { border-top: 4px solid var(--accent); background: var(--card); padding: 0.7em 0.8em; border-radius: 0 0 6px 6px; min-width: 0; }
+.flow > div.done { border-top-color: var(--line); color: var(--muted); }
+.flow b { font-family: var(--font-display); display: block; font-size: 1.15em; margin-bottom: 0.3em; color: var(--ink); }
+.flow .done b { color: var(--muted); }
+.flow code { display: block; width: fit-content; max-width: 100%; box-sizing: border-box; font-size: 0.8em; margin-top: 0.35em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.flow .what { display: block; margin-bottom: 0.2em; }
+
+/* Workflow diagrams */
+.diagram { background: var(--diagram-bg); border: 1px solid var(--line); border-radius: 8px; padding: 0.5em 0.8em; display: flex; justify-content: center; }
+.diagram img { max-width: 100%; max-height: 400px; margin: 0; display: block; }
+.diagram-note { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.2em; font-size: 0.72em; line-height: 1.4; margin-top: 0.7em; }
+.diagram-note > div { min-width: 0; }
+.diagram-note b { display: block; font-family: var(--font-display); color: var(--accent); font-size: 1.05em; line-height: 1.25; margin-bottom: 0.3em; }
+
+/* Harness components around the agent */
+.harness { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.6em; }
+.harness > * { min-width: 0; }
+.harness .box { font-size: 0.66em; }
+.harness .agent { grid-column: 1 / -1; display: flex; align-items: center; justify-content: center; background: var(--accent); color: var(--paper); font-family: var(--font-display); font-weight: 800; font-size: 0.95em; border-radius: 999px; padding: 0.5em 1em; }
+
+/* Guides and sensors diagram */
+.gs { display: grid; grid-template-columns: 1fr 110px 210px 120px 1.1fr; align-items: center; margin-top: 0.4em; }
+.gs > * { min-width: 0; }
+.gs .box { font-size: 0.64em; display: grid; gap: 0.25em; }
+.gs .box p { margin: 0 0 0.3em; }
+.gs-guides { padding: 1.2em 1.1em; }
+.gs-sensors { display: grid; gap: 30px; }
+.gs-sensors .box { min-height: 125px; box-sizing: border-box; align-content: center; }
+.gs-agent { width: 210px; height: 112px; border-radius: 50%; background: var(--accent); color: var(--paper); font-family: var(--font-display); font-weight: 800; font-size: 0.95em; display: flex; align-items: center; justify-content: center; }
+.gs-arrow line { stroke: var(--muted); stroke-width: 2.5; }
+.gs-arrow polygon { fill: var(--muted); }
+
+/* Use case document */
+.uc { font-family: var(--font-mono); font-size: 0.5em; line-height: 1.5; background: var(--card); border: 1px solid var(--line); border-radius: 6px; padding: 1em 1.2em; white-space: pre-wrap; }
+.uc .h { color: var(--accent); font-weight: 600; }
+
+/* Hands-on slides: amber work order */
+.reveal section.lab { color: var(--lab-ink); }
+.reveal section.lab h2, .reveal section.lab h3 { color: var(--lab-ink); }
+.reveal section.lab .eyebrow, .reveal section.lab .eyebrow b { color: var(--lab-ink); }
+.reveal section.lab .muted { color: var(--lab-ink); opacity: 0.75; }
+.reveal section.lab a { color: var(--lab-ink); }
+.lab-head { display: flex; align-items: baseline; justify-content: space-between; gap: 1em; }
+.lab-no { font-family: var(--font-display); font-weight: 800; font-size: 4.2em; line-height: 0.8; }
+.cmd { display: grid; gap: 0.35em; margin: 0.4em 0 0.9em; }
+.cmd code { font-family: var(--font-mono); font-size: 0.95em; font-weight: 600; background: var(--lab-ink); color: var(--lab); padding: 0.35em 0.7em; border-radius: 6px; width: fit-content; border: 0; }
+.cmd code.alt { background: transparent; color: var(--lab-ink); border: 2px solid var(--lab-ink); }
+.lab-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.2em; font-size: 0.66em; }
+.lab-grid > div { border-top: 2px solid var(--lab-ink); padding-top: 0.5em; min-width: 0; }
+.lab-grid h3 { font-family: var(--font-mono); font-size: 0.8em; text-transform: uppercase; letter-spacing: 0.1em; font-weight: 600; }
+.lab-grid ul { gap: 0.2em; }
+.lab-grid li::marker { color: var(--lab-ink); }
+.reveal section.lab :not(pre) > code { background: var(--lab-soft); border-color: transparent; color: var(--lab-ink); }
+
+/* Countdown on lab slides */
+.timer { font-family: var(--font-mono); font-size: 0.75em; font-weight: 600; font-variant-numeric: tabular-nums; background: transparent; color: var(--lab-ink); border: 2px solid var(--lab-ink); border-radius: 999px; padding: 0.25em 0.8em; cursor: pointer; }
+.timer.running { background: var(--lab-ink); color: var(--lab); }
+.timer.over { background: #b3261e; border-color: #b3261e; color: #fff; }
+
+/* About me */
+.about { display: grid; grid-template-columns: 1fr 1.25fr; gap: 1.6em; align-items: start; }
+.about .facts { font-size: 0.85em; }
+.about .badges { display: flex; gap: 0.5em; margin-top: 1em; }
+.about .badges img { height: 64px; width: auto; margin: 0; background: #fff; border-radius: 8px; padding: 2px 6px; }
+.about .books { display: grid; grid-template-columns: 1fr 1fr; gap: 1.2em; }
+.about figure { margin: 0; text-align: center; }
+.about figure img { height: 340px; width: auto; margin: 0 auto; display: block; box-shadow: 0 4px 14px rgba(0,0,0,.25); }
+.about figcaption { font-size: 0.55em; margin-top: 0.7em; line-height: 1.4; }
+
+/* Risk-based review */
+.review { display: grid; grid-template-columns: 1.15fr 1fr; gap: 1.4em; align-items: start; }
+.review .steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.45em; font-size: 0.68em; line-height: 1.35; }
+.review .steps li { display: grid; grid-template-columns: 2em 1fr; gap: 0.7em; align-items: start; background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 0.5em 0.8em; }
+.review .steps li b { display: block; font-family: var(--font-display); }
+.review .steps .n { font-family: var(--font-mono); font-weight: 600; color: var(--accent); border: 2px solid var(--accent); border-radius: 50%; width: 1.7em; height: 1.7em; display: grid; place-items: center; }
+.review .steps li.human { border-color: var(--accent); border-width: 2px; }
+.review .side { display: grid; gap: 0.8em; }
+.review .tiers { display: grid; gap: 0.35em; }
+.review .tier { display: inline-grid; place-items: center; width: 1.5em; height: 1.5em; margin-right: 0.5em; border-radius: 4px; background: var(--accent); color: var(--paper); font-family: var(--font-mono); font-weight: 600; }
+
+/* Contact list on the closing slide */
+.reveal .contact-name { font-family: var(--font-display); font-weight: 600; font-size: 0.9em; margin: 1.2em 0 0.7em; }
+.contacts { display: grid; grid-template-columns: max-content 1fr; column-gap: 1.4em; row-gap: 0.55em; margin: 0; font-size: 0.72em; line-height: 1.3; }
+.contacts dt { color: var(--muted); font-family: var(--font-mono); font-size: 0.75em; text-transform: uppercase; letter-spacing: 0.08em; align-self: center; }
+.contacts dd { margin: 0; }
+
+@media (prefers-reduced-motion: reduce) { .reveal .slides section { transition: none !important; } }
+</style>
+
+<div class="reveal">
+<div class="slides">
+
+<!-- ============ OPENING ============ -->
+<section class="title-slide">
+  <a class="logo" href="https://martinelli.ch" target="_blank" rel="noopener" aria-label="Martinelli GmbH"><svg viewBox="0 0 1000 249.711" role="img" aria-label="Martinelli logo: Keep IT simple"><path fill-rule="evenodd" d="M 950.007812 142.046875 L 973.605469 142.046875 L 973.605469 19.410156 L 950.007812 19.410156 Z M 950.007812 142.046875 "/>
+<path fill-rule="evenodd" d="M 839.679688 19.410156 L 839.679688 142.042969 L 936.355469 142.042969 L 936.355469 118.445312 L 863.28125 118.445312 L 863.28125 19.410156 Z M 839.679688 19.410156 "/>
+<path fill-rule="evenodd" d="M 729.355469 19.410156 L 729.355469 142.042969 L 826.027344 142.042969 L 826.027344 118.445312 L 752.953125 118.445312 L 752.953125 19.410156 Z M 729.355469 19.410156 "/>
+<path fill-rule="evenodd" d="M 659.042969 68.972656 L 705.167969 68.972656 L 705.167969 92.570312 L 659.042969 92.570312 Z M 622.558594 142.046875 L 715.703125 142.046875 L 715.703125 118.445312 L 646.160156 118.445312 L 646.160156 42.980469 L 715.703125 42.980469 L 715.703125 19.410156 L 622.558594 19.410156 Z M 622.558594 142.046875 "/>
+<path fill-rule="evenodd" d="M 503.917969 141.957031 L 527.515625 141.957031 L 527.515625 68.589844 L 607.625 147.960938 L 607.679688 19.320312 L 587.453125 19.320312 L 587.453125 19.367188 L 584.082031 19.367188 L 584.082031 93.074219 L 503.761719 11.785156 Z M 503.917969 141.957031 "/>
+<path fill-rule="evenodd" d="M 466.667969 142.046875 L 490.265625 142.046875 L 490.265625 19.410156 L 466.667969 19.410156 Z M 466.667969 142.046875 "/>
+<path fill-rule="evenodd" d="M 358.644531 19.410156 L 358.644531 42.980469 L 394.027344 42.980469 L 394.027344 142.042969 L 417.628906 142.042969 L 417.628906 42.980469 L 453.015625 42.980469 L 453.015625 19.410156 Z M 358.644531 19.410156 "/>
+<path fill-rule="evenodd" d="M 275.242188 73.667969 L 275.242188 42.980469 L 309.433594 42.980469 C 313.632812 42.980469 317.25 44.496094 320.285156 47.53125 C 323.261719 50.476562 324.71875 54.066406 324.71875 58.296875 C 324.71875 62.554688 323.265625 66.179688 320.285156 69.144531 C 317.257812 72.15625 313.632812 73.667969 309.433594 73.667969 L 288.320312 73.667969 L 288.75 97.265625 L 322.324219 142.046875 L 351.820312 142.046875 L 317.542969 96.390625 C 326.4375 94.527344 333.761719 90.0625 339.507812 83.003906 C 345.371094 75.796875 348.316406 67.570312 348.316406 58.296875 C 348.316406 47.585938 344.523438 38.429688 336.941406 30.84375 C 329.324219 23.230469 320.136719 19.410156 309.433594 19.410156 L 251.644531 19.410156 L 251.644531 142.046875 L 275.242188 142.046875 Z M 275.242188 73.667969 "/>
+<path fill-rule="evenodd" d="M 180.875 14.011719 L 123.785156 142.046875 L 149.601562 142.046875 C 160.03125 118.691406 170.457031 95.335938 180.875 71.976562 L 202.253906 119.828125 L 185.359375 119.828125 L 185.359375 142.046875 L 237.960938 142.046875 Z M 180.875 14.011719 "/>
+<path fill-rule="evenodd" d="M 56.796875 63.683594 L 70.894531 92.964844 L 50.492188 142.046875 L 24.703125 142.046875 Z M 56.796875 63.683594 "/>
+<path fill-rule="evenodd" d="M 59.453125 14.183594 L 106.886719 124.375 L 120.097656 94.097656 L 84.4375 14.183594 Z M 59.453125 14.183594 "/>
+<path fill-rule="evenodd" d="M 962.945312 192.636719 C 960.921875 190.355469 958.121094 189.214844 954.542969 189.214844 C 950.964844 189.214844 948.125 190.40625 946.023438 192.792969 C 943.921875 195.175781 942.613281 198.289062 942.09375 202.128906 L 966.289062 202.128906 C 966.082031 198.082031 964.96875 194.917969 962.945312 192.636719 M 954.929688 226.558594 C 948.96875 226.558594 944.234375 224.546875 940.734375 220.527344 C 937.234375 216.507812 935.480469 211.464844 935.480469 205.394531 C 935.480469 199.429688 937.257812 194.414062 940.808594 190.34375 C 944.363281 186.269531 948.941406 184.234375 954.542969 184.234375 C 960.457031 184.234375 965.019531 186.296875 968.234375 190.417969 C 971.453125 194.542969 973.058594 200.027344 973.058594 206.871094 L 941.941406 206.871094 C 942.195312 211.125 943.457031 214.589844 945.710938 217.261719 C 947.96875 219.933594 951.042969 221.265625 954.929688 221.265625 C 960.945312 221.265625 964.65625 218.515625 966.054688 213.019531 L 972.203125 213.019531 C 971.269531 217.324219 969.296875 220.65625 966.289062 223.015625 C 963.28125 225.375 959.492188 226.558594 954.929688 226.558594 M 922.644531 169.84375 L 928.945312 169.84375 L 928.945312 225.46875 L 922.644531 225.46875 Z M 898.140625 221.34375 C 901.875 221.34375 904.726562 219.894531 906.699219 216.988281 C 908.667969 214.082031 909.652344 210.269531 909.652344 205.550781 C 909.652344 200.832031 908.667969 197.007812 906.699219 194.074219 C 904.726562 191.144531 901.898438 189.679688 898.214844 189.679688 C 894.015625 189.679688 890.828125 191.171875 888.648438 194.152344 C 886.46875 197.136719 885.378906 200.9375 885.378906 205.550781 C 885.378906 210.269531 886.417969 214.082031 888.492188 216.988281 C 890.566406 219.894531 893.78125 221.34375 898.140625 221.34375 M 879.46875 238.382812 L 879.46875 185.246094 L 885.769531 185.246094 L 885.769531 190.925781 L 885.925781 190.925781 C 889.191406 186.515625 893.496094 184.3125 898.839844 184.3125 C 904.023438 184.3125 908.203125 186.191406 911.367188 189.953125 C 914.53125 193.710938 916.109375 198.886719 916.109375 205.472656 C 916.109375 211.957031 914.554688 217.101562 911.441406 220.917969 C 908.332031 224.726562 904.050781 226.632812 898.605469 226.632812 C 893.210938 226.632812 888.984375 224.664062 885.925781 220.722656 L 885.769531 220.722656 L 885.769531 238.382812 Z M 817.695312 225.46875 L 817.695312 185.246094 L 824 185.246094 L 824 191.003906 L 824.152344 191.003906 C 825.449219 188.980469 827.136719 187.359375 829.210938 186.140625 C 831.285156 184.921875 833.542969 184.3125 835.980469 184.3125 C 841.21875 184.3125 844.71875 186.699219 846.480469 191.472656 L 846.636719 191.472656 C 847.882812 189.238281 849.621094 187.488281 851.851562 186.21875 C 854.078125 184.945312 856.4375 184.3125 858.929688 184.3125 C 862.609375 184.3125 865.566406 185.441406 867.796875 187.695312 C 870.027344 189.953125 871.144531 193.128906 871.144531 197.226562 L 871.144531 225.46875 L 864.84375 225.46875 L 864.84375 197.539062 C 864.84375 195.101562 864.128906 193.167969 862.703125 191.742188 C 861.277344 190.316406 859.527344 189.601562 857.453125 189.601562 C 854.804688 189.601562 852.5 190.640625 850.527344 192.714844 C 848.554688 194.789062 847.570312 197.355469 847.570312 200.417969 L 847.570312 225.46875 L 841.269531 225.46875 L 841.269531 197.539062 C 841.269531 195.101562 840.632812 193.167969 839.363281 191.742188 C 838.09375 190.316406 836.421875 189.601562 834.34375 189.601562 C 831.75 189.601562 829.378906 190.652344 827.226562 192.753906 C 825.074219 194.855469 824 197.40625 824 200.417969 L 824 225.46875 Z M 802.835938 169.84375 L 809.140625 169.84375 L 809.140625 177.621094 L 802.835938 177.621094 Z M 802.835938 185.246094 L 809.140625 185.246094 L 809.140625 225.46875 L 802.835938 225.46875 Z M 780.898438 226.632812 C 775.402344 226.632812 771.136719 225.402344 768.101562 222.9375 C 765.066406 220.476562 763.394531 216.960938 763.082031 212.398438 L 769.539062 212.398438 C 770.265625 218.363281 774.105469 221.34375 781.054688 221.34375 C 784.21875 221.34375 786.566406 220.734375 788.09375 219.515625 C 789.625 218.296875 790.390625 216.703125 790.390625 214.730469 C 790.390625 212.605469 789.640625 211.074219 788.132812 210.140625 C 786.628906 209.207031 783.882812 208.328125 779.886719 207.496094 C 778.226562 207.132812 776.917969 206.835938 775.960938 206.601562 C 775 206.367188 773.84375 206.03125 772.496094 205.589844 C 771.148438 205.148438 770.097656 204.65625 769.347656 204.113281 C 768.59375 203.566406 767.828125 202.90625 767.050781 202.128906 C 766.273438 201.347656 765.714844 200.390625 765.378906 199.25 C 765.042969 198.109375 764.871094 196.835938 764.871094 195.4375 C 764.871094 192.011719 766.128906 189.316406 768.644531 187.34375 C 771.160156 185.375 774.726562 184.390625 779.34375 184.390625 C 788.886719 184.390625 794.152344 188.59375 795.136719 196.992188 L 788.679688 196.992188 C 788.367188 194.347656 787.460938 192.417969 785.957031 191.195312 C 784.453125 189.976562 782.195312 189.367188 779.1875 189.367188 C 776.4375 189.367188 774.402344 189.902344 773.078125 190.964844 C 771.757812 192.027344 771.097656 193.414062 771.097656 195.125 C 771.097656 197.097656 771.871094 198.484375 773.429688 199.289062 C 774.988281 200.089844 777.8125 200.910156 781.910156 201.738281 C 784.398438 202.257812 786.359375 202.738281 787.785156 203.179688 C 789.210938 203.617188 790.699219 204.292969 792.257812 205.199219 C 793.8125 206.109375 794.953125 207.316406 795.679688 208.820312 C 796.40625 210.324219 796.769531 212.191406 796.769531 214.421875 C 796.769531 218.363281 795.316406 221.382812 792.414062 223.484375 C 789.507812 225.585938 785.671875 226.632812 780.898438 226.632812 M 703.257812 175.988281 L 703.257812 169.84375 L 747.289062 169.84375 L 747.289062 175.988281 L 728.773438 175.988281 L 728.773438 225.46875 L 721.769531 225.46875 L 721.769531 175.988281 Z M 689.175781 169.84375 L 696.175781 169.84375 L 696.175781 225.46875 L 689.175781 225.46875 Z M 651.441406 221.34375 C 655.175781 221.34375 658.027344 219.894531 660 216.988281 C 661.96875 214.082031 662.957031 210.269531 662.957031 205.550781 C 662.957031 200.832031 661.96875 197.007812 660 194.074219 C 658.027344 191.144531 655.203125 189.679688 651.519531 189.679688 C 647.320312 189.679688 644.128906 191.171875 641.949219 194.152344 C 639.773438 197.136719 638.683594 200.9375 638.683594 205.550781 C 638.683594 210.269531 639.71875 214.082031 641.792969 216.988281 C 643.871094 219.894531 647.085938 221.34375 651.441406 221.34375 M 632.769531 238.382812 L 632.769531 185.246094 L 639.070312 185.246094 L 639.070312 190.925781 L 639.226562 190.925781 C 642.496094 186.515625 646.800781 184.3125 652.140625 184.3125 C 657.328125 184.3125 661.503906 186.191406 664.667969 189.953125 C 667.832031 193.710938 669.414062 198.886719 669.414062 205.472656 C 669.414062 211.957031 667.855469 217.101562 664.746094 220.917969 C 661.632812 224.726562 657.355469 226.632812 651.910156 226.632812 C 646.515625 226.632812 642.285156 224.664062 639.226562 220.722656 L 639.070312 220.722656 L 639.070312 238.382812 Z M 616.511719 192.636719 C 614.488281 190.355469 611.6875 189.214844 608.109375 189.214844 C 604.53125 189.214844 601.691406 190.40625 599.589844 192.792969 C 597.488281 195.175781 596.179688 198.289062 595.660156 202.128906 L 619.855469 202.128906 C 619.648438 198.082031 618.535156 194.917969 616.511719 192.636719 M 608.496094 226.558594 C 602.53125 226.558594 597.800781 224.546875 594.300781 220.527344 C 590.800781 216.507812 589.046875 211.464844 589.046875 205.394531 C 589.046875 199.429688 590.824219 194.414062 594.375 190.34375 C 597.929688 186.269531 602.507812 184.234375 608.109375 184.234375 C 614.023438 184.234375 618.585938 186.296875 621.800781 190.417969 C 625.019531 194.542969 626.625 200.027344 626.625 206.871094 L 595.507812 206.871094 C 595.765625 211.125 597.023438 214.589844 599.277344 217.261719 C 601.535156 219.933594 604.609375 221.265625 608.496094 221.265625 C 614.515625 221.265625 618.222656 218.515625 619.625 213.019531 L 625.769531 213.019531 C 624.835938 217.324219 622.867188 220.65625 619.855469 223.015625 C 616.847656 225.375 613.0625 226.558594 608.496094 226.558594 M 575.046875 192.636719 C 577.070312 194.917969 578.183594 198.082031 578.390625 202.128906 L 554.195312 202.128906 C 554.714844 198.289062 556.023438 195.175781 558.125 192.792969 C 560.226562 190.40625 563.066406 189.214844 566.640625 189.214844 C 570.222656 189.214844 573.023438 190.355469 575.046875 192.636719 M 567.03125 226.558594 C 571.597656 226.558594 575.382812 225.375 578.390625 223.015625 C 581.398438 220.65625 583.371094 217.324219 584.304688 213.019531 L 578.15625 213.019531 C 576.753906 218.515625 573.046875 221.265625 567.03125 221.265625 C 563.140625 221.265625 560.070312 219.933594 557.8125 217.261719 C 555.558594 214.589844 554.296875 211.125 554.042969 206.871094 L 585.160156 206.871094 C 585.160156 200.027344 583.550781 194.542969 580.335938 190.417969 C 577.121094 186.296875 572.554688 184.234375 566.640625 184.234375 C 561.039062 184.234375 556.464844 186.269531 552.910156 190.34375 C 549.359375 194.414062 547.582031 199.429688 547.582031 205.394531 C 547.582031 211.464844 549.332031 216.507812 552.835938 220.527344 C 556.335938 224.546875 561.066406 226.558594 567.03125 226.558594 M 503.78125 225.46875 L 503.78125 169.84375 L 510.78125 169.84375 L 510.78125 197.460938 L 538.167969 169.84375 L 546.960938 169.84375 L 524.476562 192.089844 L 548.828125 225.46875 L 540.660156 225.46875 L 519.730469 196.835938 L 510.78125 205.785156 L 510.78125 225.46875 Z M 503.78125 225.46875 "/></svg></a>
+  <span class="tag">Agentic Engineering Days Zurich 2026</span>
+  <h1>Hands-on Spec-Driven Development</h1>
+  <p class="contact-name">Simon Martinelli</p>
+  <dl class="contacts">
+    <dt>When</dt><dd>20 November 2026 · 10:20–12:00</dd>
+    <dt>Where</dt><dd>Studio 1</dd>
+    <dt>Web</dt><dd><a href="https://martinelli.ch" target="_blank" rel="noopener">martinelli.ch</a></dd>
+    <dt>AI Unified Process</dt><dd><a href="https://unifiedprocess.ai" target="_blank" rel="noopener">unifiedprocess.ai</a></dd>
+    <dt>Lab</dt><dd><a href="https://github.com/martinelli-workshops/sdd-lab-agenticdays" target="_blank" rel="noopener">github.com/martinelli-workshops/sdd-lab-agenticdays</a></dd>
+  </dl>
+  <aside class="notes">Welcome. Ask: who has the Codespace running already? Start it now if not, it takes a few minutes.</aside>
+</section>
+
+<section>
+  <div class="eyebrow"><b>About me</b><span>10:20</span></div>
+  <h2>Simon Martinelli</h2>
+  <div class="about">
+    <div>
+      <ul class="facts">
+        <li><b>&gt;30 years</b> in software engineering</li>
+        <li><b>&gt;25 years</b> with Java</li>
+        <li><b>Self-employed</b> since 2009</li>
+        <li><b>Teaching</b> at four universities</li>
+        <li><b>Co-lead</b> JUG Switzerland, Berne</li>
+      </ul>
+      <div class="badges">
+        <img src="badge-java-champion.png" alt="Java Champion">
+        <img src="badge-vaadin-champion.png" alt="Vaadin Champion">
+        <img src="badge-oracle-ace-pro.png" alt="Oracle ACE Pro">
+      </div>
+    </div>
+    <div class="books">
+      <figure>
+        <a href="https://link.springer.com/book/10.1007/979-8-8688-2851-5" target="_blank" rel="noopener"><img src="book-spec-driven-development.webp" alt="Book cover: Spec-Driven Development: From Specs to Code with AI Agents by Simon Martinelli"></a>
+        <figcaption><b>Spec-Driven Development</b><br>Apress, 2026<br><span class="code-off">20% off: <code>APAUT</code></span></figcaption>
+      </figure>
+      <figure>
+        <a href="https://leanpub.com/writing-use-cases-for-ai" target="_blank" rel="noopener"><img src="guide-writing-use-cases-for-ai.webp" alt="Guide cover: Writing Use Cases for AI: How to write use cases for stakeholders, engineers, and AI agents by Simon Martinelli"></a>
+        <figcaption><b>Writing Use Cases for AI</b><br>Free on Leanpub<br><span class="muted">German: <i lang="de">Use Cases schreiben für KI</i></span></figcaption>
+      </figure>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="eyebrow"><b>Before we start</b><span>10:20</span></div>
+  <h2>Start your environment now</h2>
+  <p class="small muted">Choose one. Both work equally well.</p>
+  <div class="cols">
+    <div class="box">
+      <h3>Codespaces</h3>
+      <ul>
+        <li>Open <code>github.com/martinelli-workshops/sdd-lab-agenticdays</code></li>
+        <li><b>Code → Codespaces → Create codespace on main</b></li>
+        <li>Java, Maven, the AI Unified Process plugins and Playwright are installed for you</li>
+        <li>You work on your own branch <code>workshop/&lt;github-user&gt;</code></li>
+      </ul>
+    </div>
+    <div class="box">
+      <h3>Local</h3>
+      <ul>
+        <li>JDK 25 and Claude Code (Copilot CLI or Codex also work)</li>
+        <li><code>git clone</code> the repository</li>
+        <li>Open <code>claude</code> in the project and accept the AI Unified Process plugins it offers</li>
+        <li>Check: <code>./mvnw spring-boot:run</code></li>
+      </ul>
+    </div>
+  </div>
+  <p class="small muted" style="margin-top:1em">The setup runs in the background while we talk. We start the first lab at 10:45.</p>
+</section>
+
+<section>
+  <div class="eyebrow"><b>Agenda</b><span>100 minutes</span></div>
+  <h2>Theory in small doses, then build</h2>
+  <div class="timeline">
+    <div class="t">10:20</div><div>Why spec-driven? Methods, AI Unified Process, use cases</div><div class="d">20'</div>
+    <div class="t">10:40</div><div>The project</div><div class="d">2'</div>
+    <div class="t">10:42</div><div class="lab">Lab 1 · Use cases and entity model</div><div class="d">10'</div>
+    <div class="t">10:52</div><div class="lab">Lab 2 · Specify one use case</div><div class="d">10'</div>
+    <div class="t">11:02</div><div>From specification to code, the harness</div><div class="d">6'</div>
+    <div class="t">11:08</div><div class="lab">Lab 3 · Implement the use case</div><div class="d">20'</div>
+    <div class="t">11:28</div><div class="lab">Lab 4 · Tests and coverage</div><div class="d">15'</div>
+    <div class="t">11:43</div><div>Lessons from projects, token economy, risks</div><div class="d">12'</div>
+    <div class="t">11:55</div><div>Wrap-up and questions</div><div class="d">5'</div>
+  </div>
+</section>
+
+<!-- ============ PART 1: WHY SDD ============ -->
+<section class="divider">
+  <div class="eyebrow"><b>Part 1</b><span>10:22</span></div>
+  <div class="num">01 · FOUNDATIONS</div>
+  <h2>Why spec-driven?</h2>
+  <p>Start with the specification, not with the code.</p>
+</section>
+
+<section>
+  <div class="eyebrow"><b>Foundations</b><span>10:22</span></div>
+  <h2>Spec-Driven Development</h2>
+  <ul>
+    <li>Specifications define the <b>intended behavior</b> of the system</li>
+    <li>They are the shared contract between business and development</li>
+    <li>They reduce guesswork for humans and for the agent</li>
+  </ul>
+  <div class="cols3" style="margin-top:1.2em">
+    <div class="box"><h3>Spec-first</h3>Written before the code, thrown away after the feature.</div>
+    <div class="box" style="border-color:var(--accent)"><h3>Spec-anchored</h3>Stays in the repository. Spec and code change together. <b>This is what we do today.</b></div>
+    <div class="box"><h3>Spec-as-source</h3>Humans only edit the spec. Code is always regenerated.</div>
+  </div>
+  <div class="source">Source: <a href="https://martinfowler.com/articles/exploring-gen-ai/sdd-3-tools.html" target="_blank" rel="noopener">Birgitta Böckeler, Understanding Spec-Driven Development</a></div>
+</section>
+
+<section>
+  <div class="eyebrow"><b>Foundations</b><span>10:24</span></div>
+  <h2>AI is not a compiler</h2>
+  <div class="cols">
+    <div>
+      <p>Many developers expect: precise input, perfect output.</p>
+      <ul>
+        <li>The agent is non-deterministic</li>
+        <li>It makes plausible mistakes</li>
+        <li>It is not model-driven development</li>
+      </ul>
+      <p class="kicker">You are responsible for the output.</p>
+    </div>
+    <div>
+      <table>
+        <tr><th>Before</th><th>Now</th></tr>
+        <tr><td>Writes every line</td><td>Writes specs, reviews code</td></tr>
+        <tr><td>Follows a ticket</td><td>Owns architecture and quality</td></tr>
+        <tr><td>Knowledge in the head</td><td>Knowledge in the repository</td></tr>
+        <tr><td>Uses the IDE</td><td>Builds and tunes the harness</td></tr>
+      </table>
+      <p class="small muted" style="margin-top:0.6em">The developer does not disappear. The work moves up one level.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="eyebrow"><b>Choosing a method</b><span>10:26</span></div>
+  <h2>Five frameworks at a glance</h2>
+  <table>
+    <tr><th>Framework</th><th>Core idea</th><th>Sweet spot</th></tr>
+    <tr><td>OpenSpec</td><td>Change proposals on top of living specs</td><td>Changes in existing code, lightweight</td></tr>
+    <tr><td>BMAD</td><td>A team of agent personas</td><td>Greenfield, agile flow with AI roles</td></tr>
+    <tr><td>GitHub Spec Kit</td><td>Constitution → specify → plan → tasks</td><td>Greenfield features, any agent</td></tr>
+    <tr><td>Kiro (AWS)</td><td>Spec-centric IDE with steering and hooks</td><td>One developer, one tool</td></tr>
+    <tr class="hl"><td>AI Unified Process</td><td>Iterative process based on use cases</td><td>Enterprise, brownfield, long-lived systems</td></tr>
+  </table>
+  <p class="small muted" style="margin-top:0.8em">Choose by: greenfield or brownfield, lifetime, regulation and audit, team size, size of the context. Tools change every few weeks; check current versions.</p>
+</section>
+
+<section>
+  <div class="eyebrow"><b>AI Unified Process</b><span>10:28</span></div>
+  <h2>AI Unified Process at a glance</h2>
+  <div class="flow">
+    <div class="done"><b>Vision &amp; requirements</b><span class="what">vision, requirements, glossary <i>(prepared for you today)</i></span><code>/requirements</code></div>
+    <div><b>Specification</b><span class="what">use case diagram, use cases, entity model, review</span><code>/use-case-diagram</code><code>/entity-model</code><code>/use-case-spec</code><code>/spec-review</code></div>
+    <div><b>Construction</b><span class="what">the agent generates code layer by layer</span><code>/use-case-implement</code></div>
+    <div><b>Verification</b><span class="what">tests and coverage against the spec</span><code>/use-case-test</code><code>/use-case-coverage</code></div>
+  </div>
+  <ul style="margin-top:1.2em; font-size:0.8em">
+    <li>Iterative: one use case at a time, from spec to tested code</li>
+    <li>Every step is a skill with a template, so the output has the same structure every time</li>
+    <li>Traceable: requirement → use case → business rule → code → test</li>
+  </ul>
+  <div class="source"><a href="https://unifiedprocess.ai" target="_blank" rel="noopener">unifiedprocess.ai</a></div>
+</section>
+
+<section>
+  <div class="eyebrow"><b>AI Unified Process</b><span>10:30</span></div>
+  <h2>Greenfield workflow</h2>
+  <div class="diagram"><img src="greenfield.png" style="max-height:340px" alt="The requirements engineer creates use cases and the entity model. The AI agent reads them, using skills, MCP and guidelines, and generates code and tests. The software engineer reviews the use case, the code and the tests."></div>
+  <div class="diagram-note">
+    <div><b>Humans write the spec</b>The requirements engineer creates use cases and the entity model.</div>
+    <div><b>The agent builds</b>It reads the spec and generates code and tests, steered by skills, MCP and guidelines.</div>
+    <div><b>Humans review</b>The software engineer reviews code and tests against the use case.</div>
+  </div>
+  <aside class="notes">This is what we do today in the labs.</aside>
+</section>
+
+<section>
+  <div class="eyebrow"><b>AI Unified Process</b><span>10:32</span></div>
+  <h2>Brownfield workflow</h2>
+  <div class="diagram"><img src="brownfield.png" style="max-height:340px" alt="The AI agent reads the code, tests and documentation of the existing system and generates use cases and the entity model. The software engineer and the requirements engineer review them."></div>
+  <div class="diagram-note">
+    <div><b>The agent reads</b>Code, tests and documentation of the existing system.</div>
+    <div><b>The agent writes the spec</b><code>/reverse-engineer</code> generates use cases and the entity model.</div>
+    <div><b>Humans review, then spec-first</b>The code shows what the system does, not what it should do. From here, every change starts in the spec.</div>
+  </div>
+</section>
+
+<section>
+  <div class="eyebrow"><b>Use cases</b><span>10:34</span></div>
+  <h2>Why use cases?</h2>
+  <div class="cols" style="grid-template-columns: 1.1fr 1fr; align-items: start">
+    <div>
+      <div class="diagram"><img src="use-case-diagram.png" alt="Use case diagram: the actor Clinic User uses UC-003 Register New Owner and UC-004 Find Owner in the PetClinic system." style="max-height:300px"></div>
+      <p class="small muted" style="margin-top:0.5em">The diagram: who uses the system for which goal</p>
+    </div>
+    <div>
+      <div class="diagram"><img src="use-case-structure.png" alt="Structure of a use case: overview with ID, name, actors, goal and status; preconditions; main success scenario; optional alternative flows; postconditions." style="max-height:300px"></div>
+      <p class="small muted" style="margin-top:0.5em">The specification: one document per use case in a clearly structured format, based on the work of Ivar Jacobson and Alistair Cockburn</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="eyebrow"><b>Use cases</b><span>10:35</span></div>
+  <h2>Behavior, not code</h2>
+  <div class="cols">
+    <div class="box">
+      <h3 class="muted">Code-level requirement</h3>
+      <p>“Add <code>POST /reservations/{id}/cancel</code> and a column <code>cancelled_at</code>.”</p>
+      <ul><li>Describes the how</li><li>Only developers can read it</li><li>Outdated after the next refactoring</li></ul>
+    </div>
+    <div class="box" style="border-color:var(--accent)">
+      <h3>Behavior specification</h3>
+      <p>“A guest can cancel a reservation up to 24 hours before arrival. The system then makes the room available again.”</p>
+      <ul><li>Describes the what</li><li>Every stakeholder can read it</li><li>Stays valid when the code changes</li><li>Can be tested from the outside</li></ul>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="eyebrow"><b>Use cases</b><span>10:36</span></div>
+  <h2>Readable by every stakeholder</h2>
+  <div class="cols" style="grid-template-columns: 1.25fr 1fr">
+<div class="uc"><span class="h">UC-002 Reserve Room</span>
+Actor: Guest
+Precondition: The guest has found an available room
+
+<span class="h">Main Success Scenario</span>
+1. The guest selects the room and the dates.
+2. The system shows the total price.
+3. The guest enters name and email and confirms.
+4. The system saves the reservation and sends
+   a confirmation email.
+
+<span class="h">Alternative Flows</span>
+4a. The room was booked in the meantime. The system
+    informs the guest and shows other rooms.
+
+<span class="h">Business Rules</span>
+BR-001 A reservation is at least one night.</div>
+    <div>
+      <h3>Who reads it?</h3>
+      <ul class="small">
+        <li><b>End user:</b> is this how I work?</li>
+        <li><b>Business:</b> are the rules right?</li>
+        <li><b>Developer and agent:</b> what to build</li>
+        <li><b>Tester:</b> what to test</li>
+      </ul>
+      <p class="kicker">No screens, no APIs, no tables in a use case.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ PROJECT ============ -->
+<section class="divider">
+  <div class="eyebrow"><b>Part 2</b><span>10:40</span></div>
+  <div class="num">02 · THE PROJECT</div>
+  <h2>A hotel with ten rooms</h2>
+  <p>HRS, the hotel reservation system you build today.</p>
+</section>
+
+<section>
+  <div class="eyebrow"><b>The project</b><span>10:40</span></div>
+  <h2>What is already in the repository</h2>
+  <div class="cols">
+    <div>
+      <p class="big-quote" style="font-size:1.05em">“We are the proud owners of a small, ten-room hotel. We need a system to manage reservations, guest check-in/check-out, and room cleaning.”</p>
+      <p class="small muted">Actors: Guest · Receptionist · Manager · Housekeeping</p>
+    </div>
+    <div class="box">
+      <ul>
+        <li><code>docs/vision.md</code> the vision</li>
+        <li><code>docs/requirements.md</code> 28 functional requirements, NFRs, 12 constraints</li>
+        <li><code>docs/glossary.md</code> the domain terms</li>
+        <li><code>docs/architecture/stack.md</code> which skill builds and tests each layer</li>
+        <li>Spring Boot 4.1, Vaadin 25, jOOQ, Flyway, H2, Browserless, Playwright</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="eyebrow"><b>Labs</b><span>10:41</span></div>
+  <h2>How to work in the labs</h2>
+  <ul>
+    <li>Everybody builds the same use case: <b>Search Availability</b> (FR-001)</li>
+    <li>Your UC number may differ; use the one from <i>your</i> diagram</li>
+    <li>Read what the agent writes. Review is the job, not a formality</li>
+    <li>When the agent asks a question, answer it. Do not let it guess</li>
+    <li>Note your token usage after each lab (<code>/usage</code> or <code>/context</code>)</li>
+  </ul>
+  <p class="small muted" style="margin-top:1em">Faster than the others? Every lab has a bonus task.</p>
+</section>
+
+<!-- ============ LAB 1 ============ -->
+<section class="lab" data-background-color="var(--lab)">
+  <div class="lab-head">
+    <div class="eyebrow"><b>Hands-on</b><span>10:42–10:52</span></div>
+    <button class="timer" data-minutes="10" type="button">10:00</button>
+  </div>
+  <div style="display:flex; gap:0.6em; align-items:flex-end; margin-bottom:0.3em">
+    <span class="lab-no">1</span><h2 style="margin:0">Use cases and entity model</h2>
+  </div>
+  <div class="cmd">
+    <code>/use-case-diagram</code>
+    <code>/entity-model</code>
+  </div>
+  <div class="lab-grid">
+    <div>
+      <h3>Review</h3>
+      <ul>
+        <li><code>docs/use_cases.puml</code>: is every FR covered? Do the actors match the vision?</li>
+        <li><code>docs/entity_model.md</code>: do the names match the glossary?</li>
+      </ul>
+    </div>
+    <div>
+      <h3>Done when</h3>
+      <ul>
+        <li>You found the UC that realizes <b>FR-001 Search Availability</b> and know its number</li>
+        <li><b>Bonus:</b> rename one entity and ask the agent to make the docs consistent</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ============ LAB 2 ============ -->
+<section class="lab" data-background-color="var(--lab)">
+  <div class="lab-head">
+    <div class="eyebrow"><b>Hands-on</b><span>10:52–11:02</span></div>
+    <button class="timer" data-minutes="10" type="button">10:00</button>
+  </div>
+  <div style="display:flex; gap:0.6em; align-items:flex-end; margin-bottom:0.3em">
+    <span class="lab-no">2</span><h2 style="margin:0">Specify one use case</h2>
+  </div>
+  <div class="cmd">
+    <code>/use-case-spec UC-###</code>
+    <code>/spec-review</code>
+  </div>
+  <div class="lab-grid">
+    <div>
+      <h3>Review</h3>
+      <ul>
+        <li><code>docs/use_cases/UC-###-*.md</code></li>
+        <li>Can you test every business rule from the outside?</li>
+        <li>Any screens, APIs or tables in the text? Remove them</li>
+        <li><code>/spec-review</code>: contradictions, uncovered FRs, untestable rules</li>
+      </ul>
+    </div>
+    <div>
+      <h3>Done when</h3>
+      <ul>
+        <li>The agent's open questions are answered</li>
+        <li><code>/spec-review</code> shows no blocking findings for your use case</li>
+        <li>You would sign it as the hotel owner</li>
+        <li><b>Bonus:</b> which review finding surprised you?</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ============ SPEC TO CODE ============ -->
+<section>
+  <div class="eyebrow"><b>Construction</b><span>11:02</span></div>
+  <h2>From specification to code</h2>
+  <table>
+    <tr><th>Layer</th><th>Technology</th><th>Skill</th><th>Test skill</th></tr>
+    <tr><td>Migration</td><td>Flyway, H2</td><td><code>flyway-schema</code></td><td>–</td></tr>
+    <tr><td>Persistence</td><td>jOOQ</td><td><code>jooq-persistence</code></td><td><code>jooq-persistence-test</code></td></tr>
+    <tr><td>Service</td><td>Spring Boot 4.1</td><td><code>spring-service</code></td><td><code>spring-service-test</code></td></tr>
+    <tr class="hl"><td>UI</td><td>Vaadin Flow 25</td><td><code>vaadin-flow-ui</code></td><td><code>vaadin-flow-ui-test</code></td></tr>
+    <tr><td>E2E</td><td>Playwright, Drama Finder</td><td>–</td><td><code>vaadin-e2e-test</code></td></tr>
+  </table>
+  <ul style="margin-top:0.9em; font-size:0.72em">
+    <li><code>/use-case-implement</code> runs the skills bottom-up, as recorded in <code>docs/architecture/stack.md</code></li>
+    <li>The stack file is executable architecture. Choosing a plugin is an architecture decision</li>
+    <li>The first use case sets the style: the skills follow the patterns they find</li>
+  </ul>
+</section>
+
+<!-- ============ HARNESS ============ -->
+<section>
+  <div class="eyebrow"><b>Harness</b><span>11:04</span></div>
+  <h2>Harness engineering</h2>
+  <p class="small" style="margin-top:-0.4em"><b>The harness</b> is everything around the model that makes the agent reliable. Goal: less review effort and higher quality.</p>
+  <div class="harness">
+    <div class="box"><h3>Context</h3>Specs, CLAUDE.md, constraints</div>
+    <div class="box"><h3>Tools</h3>MCP servers, CLI, platform APIs</div>
+    <div class="box"><h3>Skills</h3>Reusable know-how per stack</div>
+    <div class="agent">AI Agent</div>
+    <div class="box"><h3>Guardrails</h3>Hooks, permissions, ArchUnit</div>
+    <div class="box"><h3>Feedback</h3>Compiler, tests, quality gates</div>
+    <div class="box"><h3>Review</h3>Human checks against the spec</div>
+  </div>
+  <p class="kicker">The model is the same for everybody. The harness makes the difference.</p>
+  <p class="small muted">The human steers: when a mistake happens more than once, improve the harness.</p>
+  <div class="source">Source: <a href="https://martinfowler.com/articles/harness-engineering.html" target="_blank" rel="noopener">Birgitta Böckeler, Harness Engineering for Coding Agent Users</a></div>
+</section>
+
+<section>
+  <div class="eyebrow"><b>Harness</b><span>11:06</span></div>
+  <h2>Guides and sensors</h2>
+  <div class="gs">
+    <div class="box gs-guides">
+      <h3>Guides</h3>
+      <p class="muted">Steer the agent before it acts</p>
+      <b>Specs and use cases</b><b>CLAUDE.md, skills, <code>stack.md</code></b><b>Architecture rules, ADRs</b>
+    </div>
+    <svg class="gs-arrow" viewBox="0 0 110 20" width="110" height="20" aria-hidden="true"><line x1="8" y1="10" x2="96" y2="10"/><polygon points="96,4 108,10 96,16"/></svg>
+    <div class="gs-agent">AI Agent</div>
+    <svg class="gs-arrow" viewBox="0 0 120 280" width="120" height="280" aria-hidden="true">
+      <line x1="14" y1="128" x2="106" y2="78"/><polygon points="4,134 12,121 18,132"/><polygon points="116,72 102,73 108,85"/>
+      <line x1="14" y1="152" x2="106" y2="202"/><polygon points="4,146 18,148 12,159"/><polygon points="116,208 108,195 102,207"/>
+    </svg>
+    <div class="gs-sensors">
+      <div class="box"><h3>Computational sensors</h3><p class="muted">Deterministic and fast</p><b>Compiler, tests, ArchUnit, SonarQube</b></div>
+      <div class="box"><h3>Inferential sensors</h3><p class="muted">AI-based, slower</p><b>Review agent, coverage check against the spec</b></div>
+    </div>
+  </div>
+  <p class="kicker" style="text-align:center">Sensors close the loop: the agent fixes its own mistakes before you review.</p>
+  <div class="source">Source: <a href="https://martinfowler.com/articles/harness-engineering.html" target="_blank" rel="noopener">Birgitta Böckeler, Harness Engineering for Coding Agent Users</a></div>
+</section>
+
+<!-- ============ LAB 3 ============ -->
+<section class="lab" data-background-color="var(--lab)">
+  <div class="lab-head">
+    <div class="eyebrow"><b>Hands-on</b><span>11:08–11:28</span></div>
+    <button class="timer" data-minutes="20" type="button">20:00</button>
+  </div>
+  <div style="display:flex; gap:0.6em; align-items:flex-end; margin-bottom:0.3em">
+    <span class="lab-no">3</span><h2 style="margin:0">Implement the use case</h2>
+  </div>
+  <div class="cmd">
+    <code>/use-case-implement UC-###</code>
+    <code class="alt">./mvnw spring-boot:run</code>
+  </div>
+  <div class="lab-grid">
+    <div>
+      <h3>Review</h3>
+      <ul>
+        <li>Migration in <code>src/main/resources/db/migration</code></li>
+        <li>Find the <code>UC-### BR-###</code> markers in the code</li>
+        <li>Open the view in the browser and try the main scenario</li>
+      </ul>
+    </div>
+    <div>
+      <h3>Done when</h3>
+      <ul>
+        <li>The application starts and the main scenario works</li>
+        <li>The agent recorded gaps in <code>docs/open_questions.md</code> instead of guessing</li>
+        <li><b>Bonus:</b> ask the agent which design decisions it made for you</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="eyebrow"><b>Verification</b><span>11:28</span></div>
+  <h2>When requirements change</h2>
+  <ul>
+    <li><b>Change the spec first:</b> the use case or the business rule, not the code</li>
+    <li><b>Update the code from the spec,</b> do not hand-patch</li>
+    <li><b>Let the tests show the impact:</b> failing tests point to code that no longer matches</li>
+    <li><b>Review spec and code together:</b> one pull request with both diffs</li>
+    <li><b>Check the coverage again:</b> where do code and spec drift apart?</li>
+  </ul>
+</section>
+
+<!-- ============ LAB 4 ============ -->
+<section class="lab" data-background-color="var(--lab)">
+  <div class="lab-head">
+    <div class="eyebrow"><b>Hands-on</b><span>11:28–11:43</span></div>
+    <button class="timer" data-minutes="15" type="button">15:00</button>
+  </div>
+  <div style="display:flex; gap:0.6em; align-items:flex-end; margin-bottom:0.3em">
+    <span class="lab-no">4</span><h2 style="margin:0">Tests and coverage</h2>
+  </div>
+  <div class="cmd">
+    <code>/use-case-test UC-###</code>
+    <code class="alt">./mvnw verify</code>
+    <code>/use-case-coverage UC-###</code>
+  </div>
+  <div class="lab-grid">
+    <div>
+      <h3>Review</h3>
+      <ul>
+        <li>Browserless test and Playwright <code>*IT</code> in <code>src/test/java</code></li>
+        <li>The coverage matrix: which step, flow or rule has no code or no test?</li>
+      </ul>
+    </div>
+    <div>
+      <h3>Done when</h3>
+      <ul>
+        <li>The tests are green and the gaps are closed or explained</li>
+        <li>You noted the tokens for this use case, spec to test</li>
+        <li><b>Bonus:</b> change a business rule (e.g. at most 14 nights), run implement, test and coverage again</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ============ PART 3: PRACTICE ============ -->
+<section class="divider">
+  <div class="eyebrow"><b>Part 3</b><span>11:43</span></div>
+  <div class="num">03 · PRACTICE</div>
+  <h2>Lessons from customer projects</h2>
+  <p>What changes when a team works like this every day.</p>
+</section>
+
+<section>
+  <div class="eyebrow"><b>Practice</b><span>11:43</span></div>
+  <h2>Two bottlenecks</h2>
+  <div class="cols">
+    <div class="box">
+      <h3>Requirements and context</h3>
+      <ul>
+        <li>The agent builds faster than the business can decide what it wants</li>
+        <li>Unclear requirements give plausible but wrong code</li>
+        <li>Large legacy code does not fit. The agent sees only what you give it</li>
+        <li>Modularity is now a requirement: self-contained systems keep the context small</li>
+        <li>A short use case is cheaper than reading a whole module</li>
+      </ul>
+    </div>
+    <div class="box">
+      <h3>Review</h3>
+      <ul>
+        <li>Generating is fast, understanding is not</li>
+        <li>Without a spec you review against nothing</li>
+        <li><b>Review must be risk-based:</b> deep review where a mistake hurts, sensors for the rest</li>
+        <li>One use case per session keeps the diff reviewable</li>
+        <li>Plan the review time. Teams underestimate it every time</li>
+      </ul>
+    </div>
+  </div>
+  <p class="small muted" style="margin-top:0.9em">Teams get smaller (1–2 developers per system), move from sprints to Kanban and track progress per use case.</p>
+</section>
+
+<section>
+  <div class="eyebrow"><b>Practice</b><span>11:45</span></div>
+  <h2>Risk-based review at Anthropic</h2>
+  <div class="review">
+    <ol class="steps">
+      <li><span class="n">1</span><div><b>Before the PR</b>Agent runs build, tests, linter. A subagent reviews the diff in a fresh context</div></li>
+      <li><span class="n">2</span><div><b>AI review on every PR</b>Parallel agents hunt bugs, verifiers vote. Only confirmed findings are posted</div></li>
+      <li><span class="n">3</span><div><b>Security review</b>Separate pass. Open findings block the merge</div></li>
+      <li><span class="n">4</span><div><b>CI and merge queue</b>Lint, types, tests, build. Re-run against the latest main</div></li>
+      <li class="human"><span class="n">5</span><div><b>Human approval by risk</b>The change sets the tier, not the author</div></li>
+    </ol>
+    <div class="side">
+      <div class="box">
+        <h3>Human approvals by risk</h3>
+        <div class="tiers">
+          <div><span class="tier">0</span><b>Low</b> docs, additive change behind a flag</div>
+          <div><span class="tier">1</span><b>Medium</b> ordinary product change</div>
+          <div><span class="tier">2</span><b>High</b> billing, CI workflows, auto-updater</div>
+        </div>
+      </div>
+      <div class="box">
+        <h3>What stays human</h3>
+        <ul>
+          <li>Should we build this at all?</li>
+          <li>Architecture decisions</li>
+          <li>Reading the evidence: tests, findings</li>
+          <li>Owning the outcome</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <p class="small muted" style="margin-top:0.8em">Steps 1–4 are automated, step 5 is human only where the risk needs it.<br>Source: <a href="https://claude.dev/blog/solving-code-review-at-anthropic" target="_blank" rel="noopener">claude.dev/blog/solving-code-review-at-anthropic</a></p>
+</section>
+
+<section>
+  <div class="eyebrow"><b>Token economy</b><span>11:47</span></div>
+  <h2>Input tokens drive the cost</h2>
+  <div class="cols">
+    <div>
+      <p class="small">Context per turn × number of turns. The whole history is sent again with every turn, and letting the agent search the repository burns tokens fast.</p>
+      <h3 style="margin-top:0.8em">Measure cost per use case</h3>
+      <p class="small">Take a baseline from spec to test. It should fall as specs and structure improve. Compare your number from today.</p>
+    </div>
+    <div class="box">
+      <h3>Levers</h3>
+      <ul>
+        <li>One use case per session, then close it</li>
+        <li>Point to files instead of letting it search</li>
+        <li>Keep specs short and focused</li>
+        <li>Keep the prompt cache: do not switch model or MCPs mid-session</li>
+        <li>Cheap models for boilerplate, strong models for design and review</li>
+        <li>Subagents keep the main context clean</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="eyebrow"><b>Risks</b><span>11:50</span></div>
+  <h2>Risks and how to handle them</h2>
+  <table>
+    <tr><th>Risk</th><th>Mitigation</th></tr>
+    <tr><td>Plausible but wrong code, silent logic errors</td><td>Spec as oracle, tests per business rule, coverage check</td></tr>
+    <tr><td>Architecture drift</td><td>ArchUnit, stack plugin, ADRs written before the first use case</td></tr>
+    <tr><td>Prompt injection, over-permissive agents</td><td>Sandbox or VM, minimal permissions, review dependencies</td></tr>
+    <tr><td>Data leakage</td><td>No production data, self-hosted models for sensitive code</td></tr>
+    <tr><td>Spec drift</td><td>One owner per use case, spec diff in the same pull request</td></tr>
+    <tr><td>Skill erosion, false confidence</td><td>Review everything; “AI created it” is not a quality gate</td></tr>
+  </table>
+</section>
+
+<section>
+  <div class="eyebrow"><b>Practice</b><span>11:53</span></div>
+  <h2>Where it helps, and where it does not</h2>
+  <div class="cols">
+    <div class="box" style="border-color:var(--accent)">
+      <h3>“The rules are clear and the system has to live for years.”</h3>
+      <ul><li>Business applications with many rules</li><li>Long-lived and regulated systems</li><li>Brownfield modernization: <code>/reverse-engineer</code></li><li>Teams that need a shared understanding</li></ul>
+    </div>
+    <div class="box">
+      <h3 class="muted">“We do not know yet what we want.”</h3>
+      <ul><li>Quick prototypes and experiments</li><li>Algorithms and performance tuning</li><li>Visual design, look and feel</li></ul>
+    </div>
+  </div>
+</section>
+
+<!-- ============ WRAP-UP ============ -->
+<section>
+  <div class="eyebrow"><b>Wrap-up</b><span>11:55</span></div>
+  <h2>Try it on your own stack</h2>
+  <ul>
+    <li><b>Pick one real use case:</b> small, but with real business rules</li>
+    <li><b>Write the spec first:</b> vision, requirements, entity model, one use case</li>
+    <li><b>Build a minimal harness:</b> CLAUDE.md, one skill for your stack, one quality gate</li>
+    <li><b>Reuse what exists:</b> the AI Unified Process marketplace</li>
+    <li><b>Measure:</b> rework, review findings and tokens per use case</li>
+  </ul>
+  <p class="kicker">Specs and the harness reduce non-determinism. You stay responsible for the quality.</p>
+</section>
+
+<section class="title-slide">
+  <a class="logo" href="https://martinelli.ch" target="_blank" rel="noopener" aria-label="Martinelli GmbH"><svg viewBox="0 0 1000 249.711" role="img" aria-label="Martinelli logo: Keep IT simple"><path fill-rule="evenodd" d="M 950.007812 142.046875 L 973.605469 142.046875 L 973.605469 19.410156 L 950.007812 19.410156 Z M 950.007812 142.046875 "/>
+<path fill-rule="evenodd" d="M 839.679688 19.410156 L 839.679688 142.042969 L 936.355469 142.042969 L 936.355469 118.445312 L 863.28125 118.445312 L 863.28125 19.410156 Z M 839.679688 19.410156 "/>
+<path fill-rule="evenodd" d="M 729.355469 19.410156 L 729.355469 142.042969 L 826.027344 142.042969 L 826.027344 118.445312 L 752.953125 118.445312 L 752.953125 19.410156 Z M 729.355469 19.410156 "/>
+<path fill-rule="evenodd" d="M 659.042969 68.972656 L 705.167969 68.972656 L 705.167969 92.570312 L 659.042969 92.570312 Z M 622.558594 142.046875 L 715.703125 142.046875 L 715.703125 118.445312 L 646.160156 118.445312 L 646.160156 42.980469 L 715.703125 42.980469 L 715.703125 19.410156 L 622.558594 19.410156 Z M 622.558594 142.046875 "/>
+<path fill-rule="evenodd" d="M 503.917969 141.957031 L 527.515625 141.957031 L 527.515625 68.589844 L 607.625 147.960938 L 607.679688 19.320312 L 587.453125 19.320312 L 587.453125 19.367188 L 584.082031 19.367188 L 584.082031 93.074219 L 503.761719 11.785156 Z M 503.917969 141.957031 "/>
+<path fill-rule="evenodd" d="M 466.667969 142.046875 L 490.265625 142.046875 L 490.265625 19.410156 L 466.667969 19.410156 Z M 466.667969 142.046875 "/>
+<path fill-rule="evenodd" d="M 358.644531 19.410156 L 358.644531 42.980469 L 394.027344 42.980469 L 394.027344 142.042969 L 417.628906 142.042969 L 417.628906 42.980469 L 453.015625 42.980469 L 453.015625 19.410156 Z M 358.644531 19.410156 "/>
+<path fill-rule="evenodd" d="M 275.242188 73.667969 L 275.242188 42.980469 L 309.433594 42.980469 C 313.632812 42.980469 317.25 44.496094 320.285156 47.53125 C 323.261719 50.476562 324.71875 54.066406 324.71875 58.296875 C 324.71875 62.554688 323.265625 66.179688 320.285156 69.144531 C 317.257812 72.15625 313.632812 73.667969 309.433594 73.667969 L 288.320312 73.667969 L 288.75 97.265625 L 322.324219 142.046875 L 351.820312 142.046875 L 317.542969 96.390625 C 326.4375 94.527344 333.761719 90.0625 339.507812 83.003906 C 345.371094 75.796875 348.316406 67.570312 348.316406 58.296875 C 348.316406 47.585938 344.523438 38.429688 336.941406 30.84375 C 329.324219 23.230469 320.136719 19.410156 309.433594 19.410156 L 251.644531 19.410156 L 251.644531 142.046875 L 275.242188 142.046875 Z M 275.242188 73.667969 "/>
+<path fill-rule="evenodd" d="M 180.875 14.011719 L 123.785156 142.046875 L 149.601562 142.046875 C 160.03125 118.691406 170.457031 95.335938 180.875 71.976562 L 202.253906 119.828125 L 185.359375 119.828125 L 185.359375 142.046875 L 237.960938 142.046875 Z M 180.875 14.011719 "/>
+<path fill-rule="evenodd" d="M 56.796875 63.683594 L 70.894531 92.964844 L 50.492188 142.046875 L 24.703125 142.046875 Z M 56.796875 63.683594 "/>
+<path fill-rule="evenodd" d="M 59.453125 14.183594 L 106.886719 124.375 L 120.097656 94.097656 L 84.4375 14.183594 Z M 59.453125 14.183594 "/>
+<path fill-rule="evenodd" d="M 962.945312 192.636719 C 960.921875 190.355469 958.121094 189.214844 954.542969 189.214844 C 950.964844 189.214844 948.125 190.40625 946.023438 192.792969 C 943.921875 195.175781 942.613281 198.289062 942.09375 202.128906 L 966.289062 202.128906 C 966.082031 198.082031 964.96875 194.917969 962.945312 192.636719 M 954.929688 226.558594 C 948.96875 226.558594 944.234375 224.546875 940.734375 220.527344 C 937.234375 216.507812 935.480469 211.464844 935.480469 205.394531 C 935.480469 199.429688 937.257812 194.414062 940.808594 190.34375 C 944.363281 186.269531 948.941406 184.234375 954.542969 184.234375 C 960.457031 184.234375 965.019531 186.296875 968.234375 190.417969 C 971.453125 194.542969 973.058594 200.027344 973.058594 206.871094 L 941.941406 206.871094 C 942.195312 211.125 943.457031 214.589844 945.710938 217.261719 C 947.96875 219.933594 951.042969 221.265625 954.929688 221.265625 C 960.945312 221.265625 964.65625 218.515625 966.054688 213.019531 L 972.203125 213.019531 C 971.269531 217.324219 969.296875 220.65625 966.289062 223.015625 C 963.28125 225.375 959.492188 226.558594 954.929688 226.558594 M 922.644531 169.84375 L 928.945312 169.84375 L 928.945312 225.46875 L 922.644531 225.46875 Z M 898.140625 221.34375 C 901.875 221.34375 904.726562 219.894531 906.699219 216.988281 C 908.667969 214.082031 909.652344 210.269531 909.652344 205.550781 C 909.652344 200.832031 908.667969 197.007812 906.699219 194.074219 C 904.726562 191.144531 901.898438 189.679688 898.214844 189.679688 C 894.015625 189.679688 890.828125 191.171875 888.648438 194.152344 C 886.46875 197.136719 885.378906 200.9375 885.378906 205.550781 C 885.378906 210.269531 886.417969 214.082031 888.492188 216.988281 C 890.566406 219.894531 893.78125 221.34375 898.140625 221.34375 M 879.46875 238.382812 L 879.46875 185.246094 L 885.769531 185.246094 L 885.769531 190.925781 L 885.925781 190.925781 C 889.191406 186.515625 893.496094 184.3125 898.839844 184.3125 C 904.023438 184.3125 908.203125 186.191406 911.367188 189.953125 C 914.53125 193.710938 916.109375 198.886719 916.109375 205.472656 C 916.109375 211.957031 914.554688 217.101562 911.441406 220.917969 C 908.332031 224.726562 904.050781 226.632812 898.605469 226.632812 C 893.210938 226.632812 888.984375 224.664062 885.925781 220.722656 L 885.769531 220.722656 L 885.769531 238.382812 Z M 817.695312 225.46875 L 817.695312 185.246094 L 824 185.246094 L 824 191.003906 L 824.152344 191.003906 C 825.449219 188.980469 827.136719 187.359375 829.210938 186.140625 C 831.285156 184.921875 833.542969 184.3125 835.980469 184.3125 C 841.21875 184.3125 844.71875 186.699219 846.480469 191.472656 L 846.636719 191.472656 C 847.882812 189.238281 849.621094 187.488281 851.851562 186.21875 C 854.078125 184.945312 856.4375 184.3125 858.929688 184.3125 C 862.609375 184.3125 865.566406 185.441406 867.796875 187.695312 C 870.027344 189.953125 871.144531 193.128906 871.144531 197.226562 L 871.144531 225.46875 L 864.84375 225.46875 L 864.84375 197.539062 C 864.84375 195.101562 864.128906 193.167969 862.703125 191.742188 C 861.277344 190.316406 859.527344 189.601562 857.453125 189.601562 C 854.804688 189.601562 852.5 190.640625 850.527344 192.714844 C 848.554688 194.789062 847.570312 197.355469 847.570312 200.417969 L 847.570312 225.46875 L 841.269531 225.46875 L 841.269531 197.539062 C 841.269531 195.101562 840.632812 193.167969 839.363281 191.742188 C 838.09375 190.316406 836.421875 189.601562 834.34375 189.601562 C 831.75 189.601562 829.378906 190.652344 827.226562 192.753906 C 825.074219 194.855469 824 197.40625 824 200.417969 L 824 225.46875 Z M 802.835938 169.84375 L 809.140625 169.84375 L 809.140625 177.621094 L 802.835938 177.621094 Z M 802.835938 185.246094 L 809.140625 185.246094 L 809.140625 225.46875 L 802.835938 225.46875 Z M 780.898438 226.632812 C 775.402344 226.632812 771.136719 225.402344 768.101562 222.9375 C 765.066406 220.476562 763.394531 216.960938 763.082031 212.398438 L 769.539062 212.398438 C 770.265625 218.363281 774.105469 221.34375 781.054688 221.34375 C 784.21875 221.34375 786.566406 220.734375 788.09375 219.515625 C 789.625 218.296875 790.390625 216.703125 790.390625 214.730469 C 790.390625 212.605469 789.640625 211.074219 788.132812 210.140625 C 786.628906 209.207031 783.882812 208.328125 779.886719 207.496094 C 778.226562 207.132812 776.917969 206.835938 775.960938 206.601562 C 775 206.367188 773.84375 206.03125 772.496094 205.589844 C 771.148438 205.148438 770.097656 204.65625 769.347656 204.113281 C 768.59375 203.566406 767.828125 202.90625 767.050781 202.128906 C 766.273438 201.347656 765.714844 200.390625 765.378906 199.25 C 765.042969 198.109375 764.871094 196.835938 764.871094 195.4375 C 764.871094 192.011719 766.128906 189.316406 768.644531 187.34375 C 771.160156 185.375 774.726562 184.390625 779.34375 184.390625 C 788.886719 184.390625 794.152344 188.59375 795.136719 196.992188 L 788.679688 196.992188 C 788.367188 194.347656 787.460938 192.417969 785.957031 191.195312 C 784.453125 189.976562 782.195312 189.367188 779.1875 189.367188 C 776.4375 189.367188 774.402344 189.902344 773.078125 190.964844 C 771.757812 192.027344 771.097656 193.414062 771.097656 195.125 C 771.097656 197.097656 771.871094 198.484375 773.429688 199.289062 C 774.988281 200.089844 777.8125 200.910156 781.910156 201.738281 C 784.398438 202.257812 786.359375 202.738281 787.785156 203.179688 C 789.210938 203.617188 790.699219 204.292969 792.257812 205.199219 C 793.8125 206.109375 794.953125 207.316406 795.679688 208.820312 C 796.40625 210.324219 796.769531 212.191406 796.769531 214.421875 C 796.769531 218.363281 795.316406 221.382812 792.414062 223.484375 C 789.507812 225.585938 785.671875 226.632812 780.898438 226.632812 M 703.257812 175.988281 L 703.257812 169.84375 L 747.289062 169.84375 L 747.289062 175.988281 L 728.773438 175.988281 L 728.773438 225.46875 L 721.769531 225.46875 L 721.769531 175.988281 Z M 689.175781 169.84375 L 696.175781 169.84375 L 696.175781 225.46875 L 689.175781 225.46875 Z M 651.441406 221.34375 C 655.175781 221.34375 658.027344 219.894531 660 216.988281 C 661.96875 214.082031 662.957031 210.269531 662.957031 205.550781 C 662.957031 200.832031 661.96875 197.007812 660 194.074219 C 658.027344 191.144531 655.203125 189.679688 651.519531 189.679688 C 647.320312 189.679688 644.128906 191.171875 641.949219 194.152344 C 639.773438 197.136719 638.683594 200.9375 638.683594 205.550781 C 638.683594 210.269531 639.71875 214.082031 641.792969 216.988281 C 643.871094 219.894531 647.085938 221.34375 651.441406 221.34375 M 632.769531 238.382812 L 632.769531 185.246094 L 639.070312 185.246094 L 639.070312 190.925781 L 639.226562 190.925781 C 642.496094 186.515625 646.800781 184.3125 652.140625 184.3125 C 657.328125 184.3125 661.503906 186.191406 664.667969 189.953125 C 667.832031 193.710938 669.414062 198.886719 669.414062 205.472656 C 669.414062 211.957031 667.855469 217.101562 664.746094 220.917969 C 661.632812 224.726562 657.355469 226.632812 651.910156 226.632812 C 646.515625 226.632812 642.285156 224.664062 639.226562 220.722656 L 639.070312 220.722656 L 639.070312 238.382812 Z M 616.511719 192.636719 C 614.488281 190.355469 611.6875 189.214844 608.109375 189.214844 C 604.53125 189.214844 601.691406 190.40625 599.589844 192.792969 C 597.488281 195.175781 596.179688 198.289062 595.660156 202.128906 L 619.855469 202.128906 C 619.648438 198.082031 618.535156 194.917969 616.511719 192.636719 M 608.496094 226.558594 C 602.53125 226.558594 597.800781 224.546875 594.300781 220.527344 C 590.800781 216.507812 589.046875 211.464844 589.046875 205.394531 C 589.046875 199.429688 590.824219 194.414062 594.375 190.34375 C 597.929688 186.269531 602.507812 184.234375 608.109375 184.234375 C 614.023438 184.234375 618.585938 186.296875 621.800781 190.417969 C 625.019531 194.542969 626.625 200.027344 626.625 206.871094 L 595.507812 206.871094 C 595.765625 211.125 597.023438 214.589844 599.277344 217.261719 C 601.535156 219.933594 604.609375 221.265625 608.496094 221.265625 C 614.515625 221.265625 618.222656 218.515625 619.625 213.019531 L 625.769531 213.019531 C 624.835938 217.324219 622.867188 220.65625 619.855469 223.015625 C 616.847656 225.375 613.0625 226.558594 608.496094 226.558594 M 575.046875 192.636719 C 577.070312 194.917969 578.183594 198.082031 578.390625 202.128906 L 554.195312 202.128906 C 554.714844 198.289062 556.023438 195.175781 558.125 192.792969 C 560.226562 190.40625 563.066406 189.214844 566.640625 189.214844 C 570.222656 189.214844 573.023438 190.355469 575.046875 192.636719 M 567.03125 226.558594 C 571.597656 226.558594 575.382812 225.375 578.390625 223.015625 C 581.398438 220.65625 583.371094 217.324219 584.304688 213.019531 L 578.15625 213.019531 C 576.753906 218.515625 573.046875 221.265625 567.03125 221.265625 C 563.140625 221.265625 560.070312 219.933594 557.8125 217.261719 C 555.558594 214.589844 554.296875 211.125 554.042969 206.871094 L 585.160156 206.871094 C 585.160156 200.027344 583.550781 194.542969 580.335938 190.417969 C 577.121094 186.296875 572.554688 184.234375 566.640625 184.234375 C 561.039062 184.234375 556.464844 186.269531 552.910156 190.34375 C 549.359375 194.414062 547.582031 199.429688 547.582031 205.394531 C 547.582031 211.464844 549.332031 216.507812 552.835938 220.527344 C 556.335938 224.546875 561.066406 226.558594 567.03125 226.558594 M 503.78125 225.46875 L 503.78125 169.84375 L 510.78125 169.84375 L 510.78125 197.460938 L 538.167969 169.84375 L 546.960938 169.84375 L 524.476562 192.089844 L 548.828125 225.46875 L 540.660156 225.46875 L 519.730469 196.835938 L 510.78125 205.785156 L 510.78125 225.46875 Z M 503.78125 225.46875 "/></svg></a>
+  <div class="eyebrow"><b>Thank you</b><span>12:00</span></div>
+  <h1>Questions?</h1>
+  <p class="contact-name">Simon Martinelli</p>
+  <dl class="contacts">
+    <dt>Email</dt><dd><a href="mailto:simon@martinelli.ch">simon@martinelli.ch</a></dd>
+    <dt>Web</dt><dd><a href="https://martinelli.ch" target="_blank" rel="noopener">martinelli.ch</a></dd>
+    <dt>LinkedIn</dt><dd><a href="https://linkedin.com/in/simonmartinelli" target="_blank" rel="noopener">linkedin.com/in/simonmartinelli</a></dd>
+    <dt>Bluesky</dt><dd><a href="https://bsky.app/profile/martinelli.ch" target="_blank" rel="noopener">@martinelli.ch</a></dd>
+    <dt>AI Unified Process</dt><dd><a href="https://unifiedprocess.ai" target="_blank" rel="noopener">unifiedprocess.ai</a></dd>
+    <dt>Lab</dt><dd><a href="https://github.com/martinelli-workshops/sdd-lab-agenticdays" target="_blank" rel="noopener">github.com/martinelli-workshops/sdd-lab-agenticdays</a></dd>
+  </dl>
+</section>
+
+</div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/plugin/notes/notes.min.js"></script>
+<script>
+// Lab slides take the amber background from the token, so it follows the theme.
+var labColor = getComputedStyle(document.documentElement).getPropertyValue('--lab').trim() || '#f2b33d';
+document.querySelectorAll('section.lab').forEach(function (s) { s.setAttribute('data-background-color', labColor); });
+
+Reveal.initialize({
+  width: 1280, height: 720, margin: 0.06,
+  center: false, hash: false, slideNumber: 'c/t',
+  transition: 'fade', transitionSpeed: 'fast', backgroundTransition: 'fade',
+  plugins: [RevealNotes]
+});
+
+// Countdown timers on lab slides: click to start or pause, double-click to reset.
+document.querySelectorAll('.timer').forEach(function (btn) {
+  var total = Number(btn.dataset.minutes) * 60, left = total, id = null;
+  function show() {
+    var a = Math.abs(left), m = Math.floor(a / 60), s = a % 60;
+    btn.textContent = (left < 0 ? '+' : '') + m + ':' + String(s).padStart(2, '0');
+    btn.classList.toggle('over', left < 0);
+  }
+  btn.addEventListener('click', function () {
+    if (id) { clearInterval(id); id = null; btn.classList.remove('running'); return; }
+    btn.classList.add('running');
+    id = setInterval(function () { left--; show(); }, 1000);
+  });
+  btn.addEventListener('dblclick', function () { clearInterval(id); id = null; left = total; btn.classList.remove('running'); show(); });
+  show();
+});
+</script>
